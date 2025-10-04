@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LedgerIQ - Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        .container { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; width: 100vw; min-height: 100vh; background: #f4f4f4; }
+        .form-section, .user-section { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 40px 16px; padding: 32px 24px; }
+        .form-section { min-width: 340px; max-width: 400px; flex: 1; }
+    .user-section { flex: 2; min-width: 400px; max-width: 900px; }
+    .manager-list { margin-top: 32px; }
+    .manager-list table { width: 100%; border-collapse: collapse; }
+    .manager-list th, .manager-list td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .manager-list th { background: #e8e8e8; }
+        .logo { text-align: center; font-size: 2em; color: #714B67; font-weight: bold; margin-bottom: 24px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 18px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #714B67; color: #fff; border: none; padding: 10px 18px; border-radius: 4px; font-size: 1em; cursor: pointer; }
+        button:hover { background: #563656; }
+        .user-list { margin-top: 0; }
+        .user-list table { width: 100%; border-collapse: collapse; }
+        .user-list th, .user-list td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .user-list th { background: #f4f4f4; }
+        @media (max-width: 900px) {
+            .container { flex-direction: column; align-items: stretch; }
+            .form-section, .user-section { max-width: 100vw; margin: 24px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="flex-direction:column;">
+        <div style="display:flex; flex-direction:row; justify-content:center; align-items:flex-start; width:100%;">
+            <div class="form-section">
+                <div class="logo">Admins Dashboard</div>
+                <form id="addUserForm">
+                    <label for="employee_name">Employee Name</label>
+                    <input type="text" id="employee_name" name="employee_name" required>
+                    <label for="manager">Manager</label>
+                    <input type="text" id="manager" name="manager" required placeholder="Enter manager name">
+                    <label for="role">Role</label>
+                    <input type="text" id="role" name="role" required placeholder="Enter role">
+                    <label for="id_no">ID No</label>
+                    <input type="text" id="id_no" name="id_no" required>
+                    <label for="user_email">Email</label>
+                    <input type="email" id="user_email" name="user_email" required>
+                    <button type="submit">Add User</button>
+                </form>
+                <div id="addUserMsg" style="color:green; margin-bottom:10px;"></div>
+            </div>
+            <div class="user-section">
+                <div class="user-list">
+                    <h3>Users</h3>
+                    <table id="usersTable" style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Manager</th>
+                                <th>Role</th>
+                                <th>ID No</th>
+                                <th>Email</th>
+                                <th>Send Password</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="manager-list">
+                    <h3>Managers</h3>
+                    <table id="managersTable" style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>ID No</th>
+                                <th>Email</th>
+                                <th>Send Password</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Admins View: separate horizontal block -->
+        </div>
+        <div style="margin:32px 16px 0 16px; max-width:1800px; width:95vw; align-self:center;">
+            <h2 style="margin-bottom:18px; color:#714B67; font-size:1.5em; font-weight:bold;">Admins View</h2>
+            <div class="admins-view" style="display:flex; flex-direction:row; justify-content:center; align-items:flex-start; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:32px 24px;">
+            <div style="min-width:260px; max-width:320px; margin-right:64px;">
+                <div style="display:flex; align-items:center; justify-content:flex-start; margin-bottom:8px; width:100%;">
+                    <div style="display:flex; align-items:center; max-width:420px; width:100%;">
+                        <label for="isManagerApprover" style="font-weight:500; margin-right:8px; white-space:nowrap;">Approvers (is manager is the approver)</label>
+                        <input type="checkbox" id="isManagerApprover" style="width:18px; height:18px;">
+                    </div>
+                </div>
+                <table id="adminsUserRequiredTable" style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:6px; border-bottom:1px solid #ccc;">User</th>
+                            <th style="text-align:center; padding:6px; border-bottom:1px solid #ccc;">Required</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminsUserRequiredBody">
+                    </tbody>
+                </table>
+                <div style="margin-top:18px;">
+                    <div style="display:flex; align-items:center;">
+                        <label for="approversSequenceCheckbox" style="font-weight:500; margin-bottom:6px; margin-right:8px;">Approvers Sequence</label>
+                        <input type="checkbox" id="approversSequenceCheckbox" style="width:18px; height:18px;">
+                    </div>
+                    <div style="margin-top:14px; display:flex; align-items:center;">
+                        <label for="minimalApprovalPercentage" style="font-weight:500; margin-right:8px;">Minimal Approval Percentage</label>
+                        <input type="number" id="minimalApprovalPercentage" min="1" max="100" placeholder="e.g. 75" style="width:80px; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                        <span style="margin-left:4px;">%</span>
+                    </div>
+                </div>
+            </div>
+            <div style="flex:1;">
+                <div style="font-weight:500; min-width:120px; margin-bottom:8px;">Description</div>
+                <ul style="margin-top:0;">
+                    <li>All expenses above $500 require manager approval.</li>
+                    <li>Travel expenses must be accompanied by receipts.</li>
+                    <li>Personal expenses are not reimbursable.</li>
+                    <li>Expense claims must be submitted within 30 days of the transaction.</li>
+                    <li>Meals and entertainment expenses must include a list of attendees.</li>
+                </ul>
+                <div style="margin-top:18px; display:flex; align-items:center;">
+                    <label for="adminUserSearch" style="font-weight:500; margin-right:8px;">User</label>
+                    <input type="text" id="adminUserSearch" placeholder="Enter user name..." style="padding:6px; border-radius:4px; border:1px solid #ccc; width:180px; margin-right:8px;">
+                </div>
+                <div style="margin-top:18px; display:flex; align-items:center;">
+                    <label style="font-weight:500; margin-right:8px;">Manager</label>
+                    <input type="text" id="currentManagerName" readonly style="padding:6px; border-radius:4px; border:1px solid #ccc; width:180px; margin-right:8px;">
+                    <select id="managerDropdown" style="padding:6px; border-radius:4px; border:1px solid #ccc; width:180px;"></select>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script>
+        // Approvers logic: save to localStorage and show message for both checkboxes
+        document.addEventListener('DOMContentLoaded', function() {
+            const approverCheckbox = document.getElementById('isManagerApprover');
+            const sequenceCheckbox = document.getElementById('approversSequenceCheckbox');
+            const adminsView = document.querySelector('.admins-view');
+            let infoMsg = document.getElementById('approverInfoMsg');
+            if (!infoMsg) {
+                infoMsg = document.createElement('div');
+                infoMsg.id = 'approverInfoMsg';
+                infoMsg.style.color = '#2d7a2d';
+                infoMsg.style.fontWeight = '500';
+                infoMsg.style.margin = '8px 0 12px 0';
+                if (adminsView) adminsView.insertBefore(infoMsg, adminsView.firstChild.nextSibling);
+            }
+            function updateApproverInfo() {
+                let msg = '';
+                if (approverCheckbox && approverCheckbox.checked) {
+                    localStorage.setItem('ledgeriq_manager_is_approver', 'true');
+                    msg += 'Requests will go to the user\'s manager first before other approvers. ';
+                } else {
+                    localStorage.setItem('ledgeriq_manager_is_approver', 'false');
+                }
+                if (sequenceCheckbox && sequenceCheckbox.checked) {
+                    localStorage.setItem('ledgeriq_approvers_sequence', 'true');
+                    msg += 'Approvals will follow the sequence: requests go to the first approver (e.g., HariKaran), then to the next (e.g., Mitchell), and so on. If any required approver rejects, the expense request is automatically rejected.';
+                } else {
+                    localStorage.setItem('ledgeriq_approvers_sequence', 'false');
+                }
+                infoMsg.textContent = msg;
+            }
+            if (approverCheckbox) {
+                approverCheckbox.addEventListener('change', updateApproverInfo);
+                const stored = localStorage.getItem('ledgeriq_manager_is_approver');
+                if (stored === 'true') {
+                    approverCheckbox.checked = true;
+                } else {
+                    approverCheckbox.checked = false;
+                }
+            }
+            if (sequenceCheckbox) {
+                sequenceCheckbox.addEventListener('change', updateApproverInfo);
+                const storedSeq = localStorage.getItem('ledgeriq_approvers_sequence');
+                if (storedSeq === 'true') {
+                    sequenceCheckbox.checked = true;
+                } else {
+                    sequenceCheckbox.checked = false;
+                }
+            }
+            updateApproverInfo();
+        });
+        // Store and display users in localStorage for demo
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('ledgeriq_users') || '[]');
+        }
+        function saveUsers(users) {
+            localStorage.setItem('ledgeriq_users', JSON.stringify(users));
+        }
+        function getManagers() {
+            return JSON.parse(localStorage.getItem('ledgeriq_managers') || '[]');
+        }
+        function saveManagers(managers) {
+            localStorage.setItem('ledgeriq_managers', JSON.stringify(managers));
+        }
+        function renderUsers() {
+            const users = getUsers();
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+            users.forEach((u, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${u.employee_name}</td><td>${u.manager}</td><td>${u.role}</td><td>${u.id_no}</td><td>${u.email}</td><td><button data-idx="${idx}" class="sendPwdBtn">Send Password</button></td><td><button data-idx="${idx}" class="deleteUserBtn" style="background:#e74c3c; color:#fff;">Delete</button></td>`;
+                tbody.appendChild(tr);
+            });
+            // Render managers
+            const managers = getManagers();
+            const mtbody = document.querySelector('#managersTable tbody');
+            mtbody.innerHTML = '';
+            managers.forEach((m, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${m.employee_name}</td><td>${m.role}</td><td>${m.id_no}</td><td>${m.email}</td><td><button data-idx="${idx}" class="sendPwdBtnManager">Send Password</button></td><td><button data-idx="${idx}" class="deleteManagerBtn" style="background:#e74c3c; color:#fff;">Delete</button></td>`;
+                mtbody.appendChild(tr);
+            });
+            // Render Admins View User/Required table
+            const adminsUserRequiredBody = document.getElementById('adminsUserRequiredBody');
+            if (adminsUserRequiredBody) {
+                adminsUserRequiredBody.innerHTML = '';
+                users.forEach((u, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td style="padding:6px; border-bottom:1px solid #eee;">${u.employee_name}</td><td style="text-align:center; padding:6px; border-bottom:1px solid #eee;"><input type="checkbox" id="requiredCheckbox_${idx}"></td>`;
+                    adminsUserRequiredBody.appendChild(tr);
+                });
+            }
+        }
+
+        // (Admins View user list and search removed as per new requirements)
+
+        // Manager field and dynamic dropdown logic in Admins View
+        function updateManagerDropdown(selectedManager, userFound) {
+            const users = getUsers();
+            const managerDropdown = document.getElementById('managerDropdown');
+            managerDropdown.innerHTML = '';
+            if (!userFound) {
+                // Leave dropdown empty if no user is found
+                return;
+            }
+            // Collect unique manager names from users
+            const managerSet = new Set(users.map(u => u.manager).filter(Boolean));
+            managerSet.forEach(mgr => {
+                const opt = document.createElement('option');
+                opt.value = mgr;
+                opt.textContent = mgr;
+                managerDropdown.appendChild(opt);
+            });
+            // Set dropdown value
+            if (selectedManager && managerSet.has(selectedManager)) {
+                managerDropdown.value = selectedManager;
+            } else if (managerDropdown.options.length > 0) {
+                managerDropdown.value = managerDropdown.options[0].value;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateManagerDropdown(undefined, false);
+            const managerDropdown = document.getElementById('managerDropdown');
+            const currentManagerName = document.getElementById('currentManagerName');
+            const userSearch = document.getElementById('adminUserSearch');
+            if (managerDropdown) {
+                managerDropdown.addEventListener('change', function() {
+                    currentManagerName.value = managerDropdown.value;
+                });
+            }
+            if (userSearch) {
+                userSearch.addEventListener('input', function() {
+                    const users = getUsers();
+                    const user = users.find(u => u.employee_name.toLowerCase() === userSearch.value.trim().toLowerCase());
+                    if (user) {
+                        currentManagerName.value = user.manager;
+                        updateManagerDropdown(user.manager, true);
+                    } else {
+                        currentManagerName.value = '';
+                        updateManagerDropdown(undefined, false);
+                    }
+                });
+            }
+        });
+
+        // Update manager dropdown when users are added/removed
+        const origRenderUsers = renderUsers;
+        renderUsers = function() {
+            origRenderUsers();
+            // If a user is entered in the search, keep the manager in sync
+            const userSearch = document.getElementById('adminUserSearch');
+            const currentManagerName = document.getElementById('currentManagerName');
+            if (userSearch && userSearch.value) {
+                const users = getUsers();
+                const user = users.find(u => u.employee_name.toLowerCase() === userSearch.value.trim().toLowerCase());
+                if (user) {
+                    currentManagerName.value = user.manager;
+                    updateManagerDropdown(user.manager, true);
+                    return;
+                }
+            }
+            updateManagerDropdown(undefined, false);
+        }
+        renderUsers();
+        const managerInput = document.getElementById('manager');
+        const roleInput = document.getElementById('role');
+        const employeeNameInput = document.getElementById('employee_name');
+        roleInput.addEventListener('input', function() {
+            if (roleInput.value.trim().toLowerCase() === 'manager') {
+                managerInput.value = employeeNameInput.value;
+                managerInput.readOnly = true;
+            } else {
+                managerInput.readOnly = false;
+                managerInput.value = '';
+            }
+        });
+        employeeNameInput.addEventListener('input', function() {
+            if (roleInput.value.trim().toLowerCase() === 'manager') {
+                managerInput.value = employeeNameInput.value;
+            }
+        });
+        document.getElementById('addUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const employee_name = employeeNameInput.value.trim();
+            const manager = managerInput.value.trim();
+            const role = roleInput.value.trim();
+            const id_no = document.getElementById('id_no').value.trim();
+            const email = document.getElementById('user_email').value.trim();
+            if (!employee_name || !manager || !role || !id_no || !email) return;
+            if (role.toLowerCase() === 'manager') {
+                // Save as manager
+                const managers = getManagers();
+                managers.push({ employee_name, role, id_no, email });
+                saveManagers(managers);
+                document.getElementById('addUserMsg').textContent = `Manager ${employee_name} added. Click 'Send Password' to send credentials.`;
+            } else {
+                // Save as user
+                const users = getUsers();
+                users.push({ employee_name, manager, role, id_no, email });
+                saveUsers(users);
+                document.getElementById('addUserMsg').textContent = `User ${employee_name} added. Click 'Send Password' to send credentials.`;
+            }
+            renderUsers();
+            setTimeout(() => { document.getElementById('addUserMsg').textContent = ''; }, 6000);
+            this.reset();
+            managerInput.readOnly = false;
+        });
+        // Send password button logic
+        document.querySelector('#usersTable').addEventListener('click', function(e) {
+            const idx = e.target.getAttribute('data-idx');
+            if (e.target.classList.contains('sendPwdBtn')) {
+                const users = getUsers();
+                const user = users[idx];
+                // Generate a random unique password
+                const password = Math.random().toString(36).slice(-8) + Date.now().toString(36).slice(-4) + 'A!';
+                // Send password via backend API
+                fetch('http://localhost:5000/send-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user.employee_name, email: user.email, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('addUserMsg').textContent = `Password for ${user.employee_name} sent to ${user.email}`;
+                    } else {
+                        document.getElementById('addUserMsg').textContent = `Failed to send password: ${data.error || 'Unknown error'}`;
+                    }
+                    setTimeout(() => { document.getElementById('addUserMsg').textContent = ''; }, 6000);
+                })
+                .catch(err => {
+                    document.getElementById('addUserMsg').textContent = `Failed to send password: ${err}`;
+                    setTimeout(() => { document.getElementById('addUserMsg').textContent = ''; }, 6000);
+                });
+                // Optionally, store password for user (for demo only)
+                users[idx].password = password;
+                saveUsers(users);
+            } else if (e.target.classList.contains('deleteUserBtn')) {
+                let users = getUsers();
+                const user = users[idx];
+                if (confirm(`Are you sure you want to delete user '${user.employee_name}'?`)) {
+                    users.splice(idx, 1);
+                    saveUsers(users);
+                    renderUsers();
+                }
+            }
+        });
+        // Manager table actions
+        document.querySelector('#managersTable').addEventListener('click', function(e) {
+            const idx = e.target.getAttribute('data-idx');
+            if (e.target.classList.contains('sendPwdBtnManager')) {
+                const managers = getManagers();
+                const manager = managers[idx];
+                const password = Math.random().toString(36).slice(-8) + Date.now().toString(36).slice(-4) + 'A!';
+                // Send password via backend API
+                fetch('http://localhost:5000/send-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: manager.employee_name, email: manager.email, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('addUserMsg').textContent = `Password for ${manager.employee_name} sent to ${manager.email}`;
+                    } else {
+                        document.getElementById('addUserMsg').textContent = `Failed to send password: ${data.error || 'Unknown error'}`;
+                    }
+                    setTimeout(() => { document.getElementById('addUserMsg').textContent = ''; }, 6000);
+                })
+                .catch(err => {
+                    document.getElementById('addUserMsg').textContent = `Failed to send password: ${err}`;
+                    setTimeout(() => { document.getElementById('addUserMsg').textContent = ''; }, 6000);
+                });
+                managers[idx].password = password;
+                saveManagers(managers);
+            } else if (e.target.classList.contains('deleteManagerBtn')) {
+                let managers = getManagers();
+                const manager = managers[idx];
+                if (confirm(`Are you sure you want to delete manager '${manager.employee_name}'?`)) {
+                    managers.splice(idx, 1);
+                    saveManagers(managers);
+                    renderUsers();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
