@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LedgerIQ - Submit Expense</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 32px 24px; }
+        .logo { text-align: center; font-size: 2em; color: #714B67; font-weight: bold; margin-bottom: 24px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 18px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #714B67; color: #fff; border: none; padding: 10px 18px; border-radius: 4px; font-size: 1em; cursor: pointer; }
+        button:hover { background: #563656; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Submit Expense</div>
+        <form id="expenseForm">
+            <label for="employee_name">Employee Name</label>
+            <input type="text" id="employee_name" name="employee_name" required readonly>
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" required>
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" required>
+            <label for="category">Category</label>
+            <input type="text" id="category" name="category" required>
+            <label for="paid_by">Paid By</label>
+            <input type="text" id="paid_by" name="paid_by" required>
+            <label for="remarks">Remarks</label>
+            <input type="text" id="remarks" name="remarks">
+            <label for="amount">Total Amount</label>
+            <input type="number" id="amount" name="amount" required>
+            <label for="country">Country</label>
+            <select id="country" name="country" required>
+                <option value="">Loading countries...</option>
+            </select>
+            <button type="submit">Submit Request</button>
+        </form>
+        <div id="expenseMsg" style="color:green; margin-bottom:10px;"></div>
+    </div>
+    <script>
+        // Identify employee by email (from login) and get name from users
+        const employeeEmail = localStorage.getItem('ledgeriq_logged_in_employee');
+        function getEmployeeNameByEmail(email) {
+            const users = JSON.parse(localStorage.getItem('ledgeriq_users') || '[]');
+            const user = users.find(u => u.email === email);
+            return user ? user.employee_name : '';
+        }
+        const employeeName = getEmployeeNameByEmail(employeeEmail);
+        document.addEventListener('DOMContentLoaded', function() {
+            const empNameInput = document.getElementById('employee_name');
+            if (empNameInput) empNameInput.value = employeeName;
+        });
+        function getRequests() {
+            return JSON.parse(localStorage.getItem('ledgeriq_requests') || '[]');
+        }
+        function saveRequests(requests) {
+            localStorage.setItem('ledgeriq_requests', JSON.stringify(requests));
+        }
+        // Populate country dropdown from restcountries API
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('https://restcountries.com/v3.1/all?fields=name')
+                .then(res => res.json())
+                .then(data => {
+                    const countrySelect = document.getElementById('country');
+                    countrySelect.innerHTML = '<option value="">Select country</option>';
+                    data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+                    data.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.name.common;
+                        opt.textContent = c.name.common;
+                        countrySelect.appendChild(opt);
+                    });
+                });
+        });
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const description = document.getElementById('description').value.trim();
+            const date = document.getElementById('date').value;
+            const category = document.getElementById('category').value.trim();
+            const paid_by = document.getElementById('paid_by').value.trim();
+            const remarks = document.getElementById('remarks').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const country = document.getElementById('country').value;
+            const employee_name = document.getElementById('employee_name').value.trim();
+            if (!description || !date || !category || !paid_by || isNaN(amount) || !employee_name || !country) return;
+            const requests = getRequests();
+            requests.push({ employee_name, description, date, category, paid_by, remarks, amount, country, status: 'Pending', email: employeeEmail });
+            saveRequests(requests);
+            document.getElementById('expenseMsg').textContent = 'Expense request submitted!';
+            this.reset();
+            document.getElementById('employee_name').value = employeeName;
+            setTimeout(() => { document.getElementById('expenseMsg').textContent = ''; }, 4000);
+        });
+    </script>
+</body>
+</html>
