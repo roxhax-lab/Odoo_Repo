@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LedgerIQ - Employee Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 32px 24px; }
+        .logo { text-align: center; font-size: 2em; color: #714B67; font-weight: bold; margin-bottom: 24px; }
+        h2 { color: #714B67; margin-bottom: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+        button { background: #714B67; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-size: 1em; cursor: pointer; }
+        button:hover { background: #563656; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-rejected { color: #e74c3c; font-weight: bold; }
+        .status-pending { color: #f39c12; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Employee Dashboard</div>
+        <!-- Submit Expense Request form removed as requested -->
+        <h2>My Requests</h2>
+        <div style="margin-bottom: 16px;">
+            <input type="file" id="billUpload" style="display:none" accept="image/*,application/pdf">
+            <button id="uploadBtn" style="margin-right: 10px;">Upload</button>
+            <button id="newBtn">New</button>
+        </div>
+        <div id="toSubmitField" style="margin-bottom: 8px; text-align:left; font-weight:500; color:#714B67;"></div>
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', function() {
+            document.getElementById('billUpload').click();
+        });
+        document.getElementById('billUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                alert('Bill receipt uploaded: ' + e.target.files[0].name);
+                // Here you can add logic to save the file or show a preview
+            }
+        });
+        document.getElementById('newBtn').addEventListener('click', function() {
+            window.location.href = 'submit_expense.html';
+        });
+    </script>
+        <table id="myRequestsTable">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Paid By</th>
+                    <th>Remarks</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Requests will be populated here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Identify employee by email (from login) and get name from users
+        const employeeEmail = localStorage.getItem('ledgeriq_logged_in_employee');
+        function getEmployeeNameByEmail(email) {
+            const users = JSON.parse(localStorage.getItem('ledgeriq_users') || '[]');
+            const user = users.find(u => u.email === email);
+            return user ? user.employee_name : '';
+        }
+        const employeeName = getEmployeeNameByEmail(employeeEmail);
+        // Submit Expense Request form removed, so no need to set employee name in form
+        // Store and fetch requests from localStorage
+        function getRequests() {
+            return JSON.parse(localStorage.getItem('ledgeriq_requests') || '[]');
+        }
+        function saveRequests(requests) {
+            localStorage.setItem('ledgeriq_requests', JSON.stringify(requests));
+        }
+        function renderRequests() {
+            const tbody = document.querySelector('#myRequestsTable tbody');
+            tbody.innerHTML = '';
+            const requests = getRequests().filter(r => r.email === employeeEmail);
+            // Calculate total draft amount (status === 'Draft')
+            const draftTotal = requests.filter(r => r.status && r.status.toLowerCase() === 'draft')
+                .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+            const toSubmitField = document.getElementById('toSubmitField');
+            if (toSubmitField) {
+                toSubmitField.textContent = draftTotal > 0 ? `To submit: ₹${draftTotal}` : '';
+            }
+            requests.forEach(req => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${req.employee_name || employeeName}</td>
+                    <td>${req.description}</td>
+                    <td>${req.date || ''}</td>
+                    <td>${req.category}</td>
+                    <td>${req.paid_by || ''}</td>
+                    <td>${req.remarks || ''}</td>
+                    <td>₹${req.amount}</td>
+                    <td class="status-${req.status.toLowerCase()}">${req.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // Submit Expense Request form logic removed
+        renderRequests();
+    </script>
+</body>
+</html>
