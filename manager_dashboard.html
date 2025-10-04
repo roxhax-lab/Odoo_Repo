@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LedgerIQ - Manager Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 32px 24px; }
+        .logo { text-align: center; font-size: 2em; color: #714B67; font-weight: bold; margin-bottom: 24px; }
+        h2 { color: #714B67; margin-bottom: 18px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+        button { background: #714B67; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; font-size: 1em; cursor: pointer; }
+        button:hover { background: #563656; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-rejected { color: #e74c3c; font-weight: bold; }
+        .status-pending { color: #f39c12; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Manager Dashboard</div>
+    <h2>Approvals to review</h2>
+        <table id="requestsTable">
+            <thead>
+                <tr>
+                    <th>Approval Subject</th>
+                    <th>Request Owner</th>
+                    <th>Category</th>
+                    <th>Request Status</th>
+                    <th>Total Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Requests will be populated here -->
+            </tbody>
+        </table>
+        <!-- Approval History section removed as requested -->
+    </div>
+    <script>
+        // Placeholder: Replace with real data integration
+        // Get company currency from localStorage (set by admin based on country)
+        function getCompanyCurrency() {
+            // Example: localStorage.setItem('ledgeriq_company_currency', 'USD');
+            return localStorage.getItem('ledgeriq_company_currency') || 'USD';
+        }
+        // Get employees (users) from localStorage (added by admin)
+        function getEmployees() {
+            return JSON.parse(localStorage.getItem('ledgeriq_users') || '[]');
+        }
+        // For demo, generate pending requests for each employee
+        const employees = getEmployees();
+        const pendingRequests = employees.length > 0 ? employees.map((emp, idx) => ({
+            subject: idx % 2 === 0 ? 'Conference travel' : 'Client lunch',
+            owner: emp.employee_name,
+            category: idx % 2 === 0 ? 'Travel' : 'Meals',
+            status: 'Pending',
+            amount: idx % 2 === 0 ? 12000 : 2500
+        })) : [
+            { subject: 'Conference travel', owner: 'Amit Sharma', category: 'Travel', status: 'Pending', amount: 12000 },
+            { subject: 'Client lunch', owner: 'Priya Singh', category: 'Meals', status: 'Pending', amount: 2500 }
+        ];
+        // Approval history removed as requested
+        function renderRequests() {
+            const tbody = document.querySelector('#requestsTable tbody');
+            tbody.innerHTML = '';
+            // For demo, set currency to INR (India)
+            const currency = 'INR';
+            pendingRequests.forEach((req, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${req.subject}</td>
+                    <td>${req.owner}</td>
+                    <td>${req.category}</td>
+                    <td class="status-pending">${req.status}</td>
+                    <td>${req.amount} ${currency}</td>
+                    <td>
+                        <button onclick="approveRequest(${idx})">Approve</button>
+                        <button onclick="rejectRequest(${idx})" style="background:#e74c3c; margin-left:8px;">Reject</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // renderHistory function removed as approval history is not needed
+        window.approveRequest = function(idx) {
+            const req = pendingRequests[idx];
+            req.status = 'Approved';
+            pendingRequests.splice(idx, 1);
+            renderRequests();
+        }
+        window.rejectRequest = function(idx) {
+            const req = pendingRequests[idx];
+            req.status = 'Rejected';
+            pendingRequests.splice(idx, 1);
+            renderRequests();
+        }
+        renderRequests();
+    </script>
+</body>
+</html>
